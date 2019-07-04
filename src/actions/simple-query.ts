@@ -40,6 +40,10 @@ export default class SimpleQuery extends Action {
         bypassCache
       );
 
+      if (result === null) {
+        return null;
+      }
+
       // remove the symbols
       return removeSymbols(clone(result.data));
     } else {

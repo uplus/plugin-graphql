@@ -22,7 +22,7 @@ export default class Query extends Action {
   public static async call(
     { state, dispatch }: ActionParams,
     { name, filter, bypassCache }: ActionParams
-  ): Promise<Data> {
+  ): Promise<Data | null> {
     if (name) {
       const context: Context = Context.getInstance();
       const model = this.getModelFromState(state!);
@@ -36,7 +36,11 @@ export default class Query extends Action {
         return Store.insertData(mockReturnValue, dispatch!);
       }
 
-      const schema: Schema = await context.loadSchema();
+      const schema: Schema | null = await context.loadSchema();
+
+      if (schema === null) {
+        return null;
+      }
 
       // Filter
       filter = filter ? Transformer.transformOutgoingData(model, filter as Data, true) : {};
@@ -55,6 +59,10 @@ export default class Query extends Action {
         false,
         bypassCache as boolean
       );
+
+      if (data === null) {
+        return null;
+      }
 
       // Insert incoming data into the store
       return Store.insertData(data, dispatch!);

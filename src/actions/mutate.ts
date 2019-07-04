@@ -19,7 +19,7 @@ export default class Mutate extends Action {
   public static async call(
     { state, dispatch }: ActionParams,
     { args, name }: ActionParams
-  ): Promise<Data> {
+  ): Promise<Data | null> {
     if (name) {
       const context: Context = Context.getInstance();
       const model = this.getModelFromState(state!);
@@ -33,8 +33,12 @@ export default class Mutate extends Action {
         return Store.insertData(mockReturnValue, dispatch!);
       }
 
-      const schema: Schema = await context.loadSchema();
+      const schema: Schema | null = await context.loadSchema();
       args = this.prepareArgs(args);
+
+      if (schema === null) {
+        return null;
+      }
 
       // There could be anything in the args, but we have to be sure that all records are gone through
       // transformOutgoingData()

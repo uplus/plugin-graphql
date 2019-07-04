@@ -37,6 +37,10 @@ export default class SimpleMutation extends Action {
         variables
       );
 
+      if (result === null) {
+        return null;
+      }
+
       // remove the symbols
       return clone(result.data);
     } else {

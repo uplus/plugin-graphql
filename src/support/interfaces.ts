@@ -7,6 +7,7 @@ import { DocumentNode } from "graphql/language/ast";
 import Adapter from "../adapters/adapter";
 
 export type DispatchFunction = (action: string, data: Data) => Promise<any>;
+export type OnErrorFunction = (error: Error) => void;
 
 export interface Options {
   apolloClient: any;
@@ -18,6 +19,7 @@ export interface Options {
   debug?: boolean;
   link?: ApolloLink;
   adapter?: Adapter;
+  onError?: OnErrorFunction;
 }
 
 export interface ActionParams {

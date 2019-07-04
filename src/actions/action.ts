@@ -30,20 +30,28 @@ export default class Action {
   ): Promise<any> {
     if (variables) {
       const context: Context = Context.getInstance();
-      const schema: Schema = await context.loadSchema();
+      const schema: Schema | null = await context.loadSchema();
+
+      if (schema === null) {
+        return null;
+      }
 
       const multiple: boolean = Schema.returnsConnection(schema.getMutation(name)!);
       const query = QueryBuilder.buildQuery("mutation", model, name, variables, multiple);
 
       // Send GraphQL Mutation
-      let newData = await context.apollo.request(model, query, variables, true);
+      let newData: Data | null = await context.apollo.request(model, query, variables, true);
 
-      // When this was not a destroy action, we get new data, which we should insert in the store
-      if (name !== context.adapter.getNameForDestroy(model)) {
+      if (newData === null) {
+        return null;
+      } else if (name !== context.adapter.getNameForDestroy(model)) {
+        // When this was not a destroy action, we get new data, which we should insert in the store
         newData = newData[Object.keys(newData)[0]];
 
-        // IDs as String cause terrible issues, so we convert them to integers.
-        newData.id = parseInt(newData.id, 10);
+        if (newData) {
+          // IDs as String cause terrible issues, so we convert them to integers.
+          newData.id = parseInt(newData.id, 10);
+        }
 
         const insertedData: Data = await Store.insertData(
           { [model.pluralName]: newData } as Data,

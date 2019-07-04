@@ -18,7 +18,7 @@ export default class Fetch extends Action {
   public static async call(
     { state, dispatch }: ActionParams,
     params?: ActionParams
-  ): Promise<Data> {
+  ): Promise<Data | null> {
     const context = Context.getInstance();
     const model = this.getModelFromState(state!);
 
@@ -54,6 +54,9 @@ export default class Fetch extends Action {
     // Send the request to the GraphQL API
     const data = await context.apollo.request(model, query, filter, false, bypassCache as boolean);
 
+    if (data === null) {
+      return null;
+    }
     // Insert incoming data into the store
     return Store.insertData(data, dispatch!);
   }

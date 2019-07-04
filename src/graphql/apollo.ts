@@ -70,17 +70,28 @@ export default class Apollo {
     variables?: Arguments,
     mutation: boolean = false,
     bypassCache: boolean = false
-  ): Promise<Data> {
+  ): Promise<Data | null> {
     const fetchPolicy: FetchPolicy = bypassCache ? "network-only" : "cache-first";
     Context.getInstance().logger.logQuery(query, variables, fetchPolicy);
 
+    const onError = Context.getInstance().options.onError;
     const context = { headers: Apollo.getHeaders() };
 
     let response;
-    if (mutation) {
-      response = await this.apolloClient.mutate({ mutation: query, variables, context });
-    } else {
-      response = await this.apolloClient.query({ query, variables, fetchPolicy, context });
+
+    try {
+      if (mutation) {
+        response = await this.apolloClient.mutate({ mutation: query, variables, context });
+      } else {
+        response = await this.apolloClient.query({ query, variables, fetchPolicy, context });
+      }
+    } catch (error) {
+      if (onError === undefined) {
+        throw error;
+      } else {
+        onError(error);
+        return null;
+      }
     }
 
     // Transform incoming data into something useful
@@ -94,20 +105,42 @@ export default class Apollo {
     context?: Data
   ): Promise<any> {
     const fetchPolicy: FetchPolicy = bypassCache ? "network-only" : "cache-first";
-    return this.apolloClient.query({
-      query: gql(query),
-      variables,
-      fetchPolicy,
-      context: { headers: Apollo.getHeaders() }
-    });
+    const onError = Context.getInstance().options.onError;
+
+    try {
+      return this.apolloClient.query({
+        query: gql(query),
+        variables,
+        fetchPolicy,
+        context: { headers: Apollo.getHeaders() }
+      });
+    } catch (error) {
+      if (onError === undefined) {
+        throw error;
+      } else {
+        onError(error);
+        return null;
+      }
+    }
   }
 
   public async simpleMutation(query: string, variables: Arguments, context?: Data): Promise<any> {
-    return this.apolloClient.mutate({
-      mutation: gql(query),
-      variables,
-      context: { headers: Apollo.getHeaders() }
-    });
+    const onError = Context.getInstance().options.onError;
+
+    try {
+      return this.apolloClient.mutate({
+        mutation: gql(query),
+        variables,
+        context: { headers: Apollo.getHeaders() }
+      });
+    } catch (error) {
+      if (onError === undefined) {
+        throw error;
+      } else {
+        onError(error);
+        return null;
+      }
+    }
   }
 
   private static getHeaders() {

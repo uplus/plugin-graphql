@@ -147,7 +147,7 @@ export default class Context {
     return this.instance;
   }
 
-  public async loadSchema(): Promise<Schema> {
+  public async loadSchema(): Promise<Schema | null> {
     if (!this.schemaWillBeLoaded) {
       this.schemaWillBeLoaded = new Promise(async (resolve, reject) => {
         this.logger.log("Fetching GraphQL Schema initially ...");
@@ -165,6 +165,10 @@ export default class Context {
           true,
           (context as unknown) as Data
         );
+
+        if (result === null) {
+          return;
+        }
 
         this.schema = new Schema(result.data.__schema);
 
